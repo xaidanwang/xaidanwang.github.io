@@ -339,24 +339,17 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2019/04/23/CountDownLatch使用/" >
+        <a class="abstract-title" href = "/2019/04/23/CountDownLatch源码与原理/" >
             
-                <span>CountDownLatch使用</span>
+                <span>CountDownLatch源码分析</span>
         </a>
         <div class="abstract-content">
-            CountDownLatch\
-在并发编程的场景中，最常见的一个case是某个任务的执行，需要等到多个线程都执完毕之后才可以进行，CountDownLatch可以很好解决这个问题
+            II. 实现原理AbstractQueuedSynchronizer （简称AQS）
 
-下面将主要从使用和实现原理两个方面进行说明，围绕点如下
+ AQS是一个用于构建锁和同步容器的框架。事实上concurrent包内许多类都是基于AQS构建，例如ReentrantLock，Semaphore，CountDownLatch，ReentrantReadWriteLock，FutureTask等。AQS解决了在实现同步容器时设计的大量细节问题
 
-CountDownLatch 是个什么鬼\
-怎么用（结合case说明）
-底层实现原理（及如何保障功能的正常性）
-
-I. 使用说明
-同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待
-
-1.0. 接口定义属于 java.util.concurrent 包\主要方法为下面几个12345678910111213141516171...
+AQS使用一个FIFO的队列表示排队等待锁的线程，队列头节点称作“哨兵节点”或者“哑节点”，它不与任何线程关联。其他的节点与等待线程关联，每个节点维护一个等待状态waitStatus
+12345678910...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
@@ -380,17 +373,24 @@ I. 使用说明
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2019/04/23/CountDownLatch源码与原理/" >
+        <a class="abstract-title" href = "/2019/04/23/CountDownLatch使用/" >
             
-                <span>CountDownLatch源码分析</span>
+                <span>CountDownLatch使用</span>
         </a>
         <div class="abstract-content">
-            II. 实现原理AbstractQueuedSynchronizer （简称AQS）
+            CountDownLatch\
+在并发编程的场景中，最常见的一个case是某个任务的执行，需要等到多个线程都执完毕之后才可以进行，CountDownLatch可以很好解决这个问题
 
- AQS是一个用于构建锁和同步容器的框架。事实上concurrent包内许多类都是基于AQS构建，例如ReentrantLock，Semaphore，CountDownLatch，ReentrantReadWriteLock，FutureTask等。AQS解决了在实现同步容器时设计的大量细节问题
+下面将主要从使用和实现原理两个方面进行说明，围绕点如下
 
-AQS使用一个FIFO的队列表示排队等待锁的线程，队列头节点称作“哨兵节点”或者“哑节点”，它不与任何线程关联。其他的节点与等待线程关联，每个节点维护一个等待状态waitStatus
-12345678910...
+CountDownLatch 是个什么鬼\
+怎么用（结合case说明）
+底层实现原理（及如何保障功能的正常性）
+
+I. 使用说明
+同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待
+
+1.0. 接口定义属于 java.util.concurrent 包\主要方法为下面几个12345678910111213141516171...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
@@ -594,12 +594,12 @@ AQS使用一个FIFO的队列表示排队等待锁的线程，队列头节点称�
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch源码与原理/" >CountDownLatch源码分析</a>
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch使用/" >CountDownLatch使用</a>
         </li>
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch使用/" >CountDownLatch使用</a>
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch源码与原理/" >CountDownLatch源码分析</a>
         </li>
     
     
@@ -621,9 +621,9 @@ AQS使用一个FIFO的队列表示排队等待锁的线程，队列头节点称�
         <div class="sidebar-panel-tags">
     <div class="sidebar-tags-name">
     
-        <span class="sidebar-tag-name" data-tags="java多线程编程"><span class="iconfont-archer">&#xe606;</span>java多线程编程</span>
-    
         <span class="sidebar-tag-name" data-tags="k8s"><span class="iconfont-archer">&#xe606;</span>k8s</span>
+    
+        <span class="sidebar-tag-name" data-tags="java多线程编程"><span class="iconfont-archer">&#xe606;</span>java多线程编程</span>
     
         <span class="sidebar-tag-name" data-tags="spring-boot json 序列化"><span class="iconfont-archer">&#xe606;</span>spring-boot json 序列化</span>
     
@@ -660,9 +660,9 @@ jsonContent:
         <div class="sidebar-panel-categories">
     <div class="sidebar-categories-name">
     
-        <span class="sidebar-category-name" data-categories="juc"><span class="iconfont-archer">&#xe60a;</span>juc</span>
-    
         <span class="sidebar-category-name" data-categories="k8s"><span class="iconfont-archer">&#xe60a;</span>k8s</span>
+    
+        <span class="sidebar-category-name" data-categories="juc"><span class="iconfont-archer">&#xe60a;</span>juc</span>
     
         <span class="sidebar-category-name" data-categories="java"><span class="iconfont-archer">&#xe60a;</span>java</span>
     
