@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="">
+    <!-- title -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Aidan Wang">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Aidan Wang">
+    <meta name="keywords" content="Hexo | Aidan Wang">
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>CountDownLatch源码分析 · xaidanwang</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/wangxian.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Private Blog For Aidan Wang.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">CountDownLatch源码分析</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Private Blog For Aidan Wang.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            CountDownLatch源码分析
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "java多线程编程">java多线程编程</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>字数统计: <span class="post-count word-count">1,999</span>阅读时长: <span class="post-count reading-time">9 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2019/04/23</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="II-实现原理"><a href="#II-实现原理" class="headerlink" title="II. 实现原理"></a>II. 实现原理</h1><p>AbstractQueuedSynchronizer （简称AQS）</p>
+<blockquote>
+<p> AQS是一个用于构建锁和同步容器的框架。事实上concurrent包内许多类都是基于AQS构建，例如ReentrantLock，Semaphore，CountDownLatch，ReentrantReadWriteLock，FutureTask等。AQS解决了在实现同步容器时设计的大量细节问题</p>
+</blockquote>
+<p>AQS使用一个FIFO的队列表示排队等待锁的线程，队列头节点称作“哨兵节点”或者“哑节点”，它不与任何线程关联。其他的节点与等待线程关联，每个节点维护一个等待状态waitStatus</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> Node head;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> Node tail;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> state;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> Node &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Node SHARED = <span class="keyword">new</span> Node();</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Node EXCLUSIVE = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** waitStatus value to indicate thread has cancelled */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CANCELLED =  <span class="number">1</span>;</span><br><span class="line">    <span class="comment">/** waitStatus value to indicate successor's thread needs unparking */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SIGNAL    = -<span class="number">1</span>;</span><br><span class="line">    <span class="comment">/** waitStatus value to indicate thread is waiting on condition */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CONDITION = -<span class="number">2</span>;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * waitStatus value to indicate the next acquireShared should</span></span><br><span class="line"><span class="comment">     * unconditionally propagate</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> PROPAGATE = -<span class="number">3</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//取值为 CANCELLED, SIGNAL, CONDITION, PROPAGATE 之一</span></span><br><span class="line">    <span class="keyword">volatile</span> <span class="keyword">int</span> waitStatus;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">volatile</span> Node prev;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">volatile</span> Node <span class="keyword">next</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Link to next node waiting on condition, </span></span><br><span class="line">    <span class="comment">// or the special value SHARED</span></span><br><span class="line">    <span class="keyword">volatile</span> Thread thread;</span><br><span class="line"></span><br><span class="line">    Node nextWaiter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre>
+      +------+  prev +-----+       +-----+
+ head |      | <---- |="" <----="" tail="" +------+="" +-----+="" <="" pre="">
+
+<p>CountDownLatch 内部类 Sync 继承了 AbstractQueuedSynchronizer 实现了该功能<br><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Synchronization control For CountDownLatch.</span></span><br><span class="line"><span class="comment">     * Uses AQS state to represent count.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Sync</span> <span class="keyword">extends</span> <span class="title">AbstractQueuedSynchronizer</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">4982264981922014374</span>L;</span><br><span class="line"></span><br><span class="line">        Sync(<span class="keyword">int</span> count) &#123;</span><br><span class="line">            setState(count);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">int</span> <span class="title">getCount</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="function"><span class="keyword">return</span> <span class="title">getState</span><span class="params">()</span></span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> <span class="function"><span class="keyword">int</span> <span class="title">tryAcquireShared</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> (getState() == <span class="number">0</span>) ? <span class="number">1</span> : -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryReleaseShared</span><span class="params">(<span class="keyword">int</span> releases)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// Decrement count; signal when transition to zero</span></span><br><span class="line">            <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">                <span class="keyword">int</span> c = getState();</span><br><span class="line">                <span class="keyword">if</span> (c == <span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">                <span class="keyword">int</span> nextc = c<span class="number">-1</span>;</span><br><span class="line">                <span class="keyword">if</span> (compareAndSetState(c, nextc))</span><br><span class="line">                    <span class="keyword">return</span> nextc == <span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Sync sync;</span><br></pre></td></tr></table></figure></p>
+<p>1.初始化CountDownLatch<br><figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> CountDownLatch(<span class="keyword">int</span> <span class="keyword">count</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">count</span> &lt; <span class="number">0</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"count &lt; 0"</span>);</span><br><span class="line">        <span class="keyword">this</span>.sync = <span class="keyword">new</span> Sync(<span class="keyword">count</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>AbstractQueuedSynchronizer \<br>countDown() 计数-1的实现</li>
+</ol>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计数-1</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">countDown</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    sync.releaseShared(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">boolean</span> <span class="title">releaseShared</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (tryReleaseShared(arg)) &#123; <span class="comment">// 首先尝试释放锁</span></span><br><span class="line">        doReleaseShared();</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="function"><span class="keyword">boolean</span> <span class="title">tryReleaseShared</span><span class="params">(<span class="keyword">int</span> releases)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Decrement count; signal when transition to zero</span></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">int</span> c = getState();</span><br><span class="line">        <span class="keyword">if</span> (c == <span class="number">0</span>) <span class="comment">//如果计数已经为0，则返回失败</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">int</span> nextc = c<span class="number">-1</span>;</span><br><span class="line">        <span class="comment">// 原子操作实现计数-1</span></span><br><span class="line">        <span class="keyword">if</span> (compareAndSetState(c, nextc)) </span><br><span class="line">            <span class="keyword">return</span> nextc == <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 唤醒被阻塞的线程</span></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">doReleaseShared</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        Node h = head;</span><br><span class="line">        <span class="keyword">if</span> (h != <span class="keyword">null</span> &amp;&amp; h != tail) &#123; <span class="comment">// 队列非空，表示有线程被阻塞</span></span><br><span class="line">            <span class="keyword">int</span> ws = h.waitStatus;</span><br><span class="line">            <span class="keyword">if</span> (ws == Node.SIGNAL) &#123; </span><br><span class="line">            <span class="comment">// 头结点如果为SIGNAL,则唤醒头结点下个节点上关联的线程，并出队</span></span><br><span class="line">                <span class="keyword">if</span> (!compareAndSetWaitStatus(h, Node.SIGNAL, <span class="number">0</span>))</span><br><span class="line">                    <span class="keyword">continue</span>;            <span class="comment">// loop to recheck cases</span></span><br><span class="line">                unparkSuccessor(h);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (ws == <span class="number">0</span> &amp;&amp;</span><br><span class="line">                     !compareAndSetWaitStatus(h, <span class="number">0</span>, Node.PROPAGATE))</span><br><span class="line">                <span class="keyword">continue</span>;                <span class="comment">// loop on failed CAS</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (h == head) <span class="comment">// 没有线程被阻塞，直接跳出</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面截出计数减1的完整调用链</p>
+<ol>
+<li>尝试释放锁tryReleaseShared，实现计数-1</li>
+</ol>
+<ul>
+<li>若计数已经小于0，则直接返回false</li>
+<li>否则执行计数(AQS的state)减一</li>
+<li>若减完之后，state==0，表示没有线程占用锁，即释放成功，然后就需要唤醒被阻塞的线程了</li>
+</ul>
+<ol start="2">
+<li>释放并唤醒阻塞线程 doReleaseShared</li>
+</ol>
+<ul>
+<li>如果队列为空，即表示没有线程被阻塞（也就是说没有线程调用了 CountDownLatch#wait()方法），直接退出</li>
+<li>头结点如果为SIGNAL, 则依次唤醒头结点下个节点上关联的线程，并出队</li>
+</ul>
+<p>疑问一： 看到这个实现，是不是只要countDownLatch的计数为0了，所有被阻塞的线程都会被执行？</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">CountDownLatchDemo</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> CountDownLatch countDownLatch;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> start = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> mid = <span class="number">100</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> end = <span class="number">200</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> tmpRes1, tmpRes2;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">add</span>(<span class="params"><span class="keyword">int</span> start, <span class="keyword">int</span> end</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = start; i &lt;= end; i++) &#123;</span><br><span class="line">            sum += i;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> sum;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">sum</span>(<span class="params"><span class="keyword">int</span> a, <span class="keyword">int</span> b</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> a + b;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">sub</span>(<span class="params"><span class="keyword">int</span> a, <span class="keyword">int</span> b</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> a - b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">calculate</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        countDownLatch = <span class="keyword">new</span> CountDownLatch(<span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">        Thread thread1 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 确保线程3先与1，2执行，由于countDownLatch计数不为0而阻塞</span></span><br><span class="line">                Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" : 开始执行"</span>);</span><br><span class="line">                tmpRes1 = <span class="keyword">add</span>(start, mid);</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() +</span><br><span class="line">                        <span class="string">" : calculate ans: "</span> + tmpRes1);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                countDownLatch.countDown();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, <span class="string">"线程1"</span>);</span><br><span class="line"></span><br><span class="line">        Thread thread2 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 确保线程3先与1，2执行，由于countDownLatch计数不为0而阻塞</span></span><br><span class="line">                Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" : 开始执行"</span>);</span><br><span class="line">                tmpRes2 = <span class="keyword">add</span>(mid + <span class="number">1</span>, end);</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() +</span><br><span class="line">                        <span class="string">" : calculate ans: "</span> + tmpRes2);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                countDownLatch.countDown();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, <span class="string">"线程2"</span>);</span><br><span class="line">        </span><br><span class="line">        Thread thread3 = <span class="keyword">new</span> Thread(()-&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" : 开始执行"</span>);</span><br><span class="line">                countDownLatch.<span class="keyword">await</span>();</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" : 唤醒"</span>);</span><br><span class="line">                Thread.sleep(<span class="number">100</span>); <span class="comment">// 确保线程4先执行完相减</span></span><br><span class="line">                <span class="keyword">int</span> ans = sum(tmpRes1, tmpRes2);</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() +</span><br><span class="line">                        <span class="string">" : calculate ans: "</span> + ans);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, <span class="string">"线程3"</span>);</span><br><span class="line"></span><br><span class="line">        Thread thread4 = <span class="keyword">new</span> Thread(()-&gt; &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" : 开始执行"</span>);</span><br><span class="line">                countDownLatch.<span class="keyword">await</span>();</span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() + <span class="string">" : 唤醒"</span>);</span><br><span class="line">                <span class="keyword">int</span> ans = sub(tmpRes2, tmpRes1);</span><br><span class="line">                Thread.sleep(<span class="number">200</span>); <span class="comment">// 保证线程3先输出执行结果，以验证线程3和线程4是否并发执行</span></span><br><span class="line">                System.<span class="keyword">out</span>.println(Thread.currentThread().getName() +</span><br><span class="line">                        <span class="string">" : calculate ans: "</span> + ans);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;, <span class="string">"线程4"</span>);</span><br><span class="line">        </span><br><span class="line">        thread3.start();</span><br><span class="line">        thread4.start();</span><br><span class="line">        thread1.start();</span><br><span class="line">        thread2.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) throws InterruptedException </span>&#123;</span><br><span class="line">        CountDownLatchDemo demo = <span class="keyword">new</span> CountDownLatchDemo();</span><br><span class="line">        demo.calculate();</span><br><span class="line"></span><br><span class="line">        Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出如下</p>
+<p>线程4 : 开始执行\<br>线程3 : 开始执行\<br>线程2 : 开始执行\<br>线程2 : calculate ans: 15050\<br>线程1 : 开始执行\<br>线程1 : calculate ans: 5005\<br>线程3 : 唤醒\<br>线程4 : 唤醒\<br>线程3 : calculate ans: 20055\<br>线程4 : calculate ans: 10045</p>
+<p>上面的实现中，线程3中sleep一段时间，确保线程4的计算会优先执行；线程4计算完成之后的sleep时间，以保证线程3计算完成并输出结果，然后线程4才输出结果；结合输出，这个期望是准确的，也就是说，线程3和线程4被唤醒后是并发执行的，没有先后阻塞顺序</p>
+<p>即CountDownLatch计数为0之后，所有被阻塞的线程都会被唤醒，且彼此相对独立，不会出现独占锁阻塞的问题</p>
+<h1 id="III-小结"><a href="#III-小结" class="headerlink" title="III. 小结"></a>III. 小结</h1><ol>
+<li>使用注意</li>
+</ol>
+<ul>
+<li>在创建实例时，必须指定初始的计数值，且应大于0</li>
+<li>必须有线程中显示的调用了countDown()计数-1方法；必须有线程显示调用了await()方法（没有这个就没有必要使用CountDownLatch了）</li>
+<li>由于await()方法会阻塞到计数为0，如果在代码逻辑中某个线程漏掉了计数-1，导致最终计数一直大于0，直接导致死锁了；</li>
+<li>鉴于上面一点，更多的推荐 await(long, TimeUnit)来替代直接使用await()方法，至少不会造成阻塞死只能重启的情况</li>
+<li>允许多个线程调用await方法，当计数为0后，所有被阻塞的线程都会被唤醒</li>
+</ul>
+<ol start="2">
+<li>实现原理</li>
+</ol>
+<p>await内部实现流程:</p>
+<ol>
+<li>判断state计数是否为0，不是，则直接放过执行后面的代码</li>
+<li>大于0，则表示需要阻塞等待计数为0</li>
+<li>当前线程封装Node对象，进入阻塞队列</li>
+<li>然后就是循环尝试获取锁，直到成功（即state为0）后出队，继续执行线程后续代码<br>countDown内部实现流程:</li>
+<li>尝试释放锁tryReleaseShared，实现计数-1</li>
+</ol>
+<ul>
+<li>若计数已经小于0，则直接返回false</li>
+<li>否则执行计数(AQS的state)减一</li>
+<li>若减完之后，state==0，表示没有线程占用锁，即释放成功，然后就需要唤醒被阻塞的线程了</li>
+</ul>
+<ol start="2">
+<li>释放并唤醒阻塞线程 doReleaseShared</li>
+</ol>
+<ul>
+<li>如果队列为空，即表示没有线程被阻塞（也就是说没有线程调用了 CountDownLatch#wait()方法），直接退出</li>
+<li>头结点如果为SIGNAL, 则依次唤醒头结点下个节点上关联的线程，并出队</li>
+</ul>
+</----></pre>
+    </article>
+    <!-- license  -->
+    
+        <div class="license-wrapper">
+            <p>原文作者：<a href="http://yoursite.com">Aidan Wang</a>
+            <p>原文链接：<a href="http://yoursite.com/2019/04/23/CountDownLatch源码与原理/">http://yoursite.com/2019/04/23/CountDownLatch源码与原理/</a>
+            <p>发表日期：<a href="http://yoursite.com/2019/04/23/CountDownLatch源码与原理/">April 23rd 2019, 5:42:54 pm</a>
+            <p>更新日期：<a href="http://yoursite.com/2019/04/23/CountDownLatch源码与原理/">April 23rd 2019, 5:46:28 pm</a>
+            <p>版权声明：本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2019/04/23/CountDownLatch使用/" title= "CountDownLatch使用">
+                    <div class="nextTitle">CountDownLatch使用</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2019/04/23/spring-boot-json/" title= "fast-json 时间格式化json输出">
+                    <div class="prevTitle">fast-json 时间格式化json输出</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:wangx982770631@163.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="/:/github.com/xaidanwang" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="/assets/aidanWang.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#II-实现原理"><span class="toc-number">1.</span> <span class="toc-text">II. 实现原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#III-小结"><span class="toc-number">2.</span> <span class="toc-text">III. 小结</span></a></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 4
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/spring-boot-json/" >fast-json 时间格式化json输出</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch源码与原理/" >CountDownLatch源码分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch使用/" >CountDownLatch使用</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/16</span><a class="archive-post-title" href= "/2018/09/16/hello-world/" >Hello World</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="java多线程编程"><span class="iconfont-archer">&#xe606;</span>java多线程编程</span>
+    
+        <span class="sidebar-tag-name" data-tags="k8s"><span class="iconfont-archer">&#xe606;</span>k8s</span>
+    
+        <span class="sidebar-tag-name" data-tags="spring-boot json 序列化"><span class="iconfont-archer">&#xe606;</span>spring-boot json 序列化</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="juc"><span class="iconfont-archer">&#xe60a;</span>juc</span>
+    
+        <span class="sidebar-category-name" data-categories="k8s"><span class="iconfont-archer">&#xe60a;</span>k8s</span>
+    
+        <span class="sidebar-category-name" data-categories="java"><span class="iconfont-archer">&#xe60a;</span>java</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Aidan Wang"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+

@@ -380,7 +380,41 @@ I. 使用说明
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2018/10/21/spring-boot-json/" >
+        <a class="abstract-title" href = "/2019/04/23/CountDownLatch源码与原理/" >
+            
+                <span>CountDownLatch源码分析</span>
+        </a>
+        <div class="abstract-content">
+            II. 实现原理AbstractQueuedSynchronizer （简称AQS）
+
+ AQS是一个用于构建锁和同步容器的框架。事实上concurrent包内许多类都是基于AQS构建，例如ReentrantLock，Semaphore，CountDownLatch，ReentrantReadWriteLock，FutureTask等。AQS解决了在实现同步容器时设计的大量细节问题
+
+AQS使用一个FIFO的队列表示排队等待锁的线程，队列头节点称作“哨兵节点”或者“哑节点”，它不与任何线程关联。其他的节点与等待线程关联，每个节点维护一个等待状态waitStatus
+12345678910...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/04/23</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "java多线程编程">java多线程编程</a>
+    
+</div>
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2019/04/23/spring-boot-json/" >
             
                 <span>fast-json 时间格式化json输出</span>
         </a>
@@ -391,7 +425,7 @@ I. 使用说明
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/10/21</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/04/23</span>
             </div>
             <!-- tags  -->
             
@@ -559,9 +593,20 @@ More...
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 3
+        Total : 4
         </div>
         <!-- search  -->
         
@@ -572,22 +617,18 @@ More...
     
     
     
-    <div class="archive-year"> Invalid date </div>
+    <div class="archive-year"> 2019 </div>
     <ul class="year-list">
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/10/21/spring-boot-json/" >fast-json 时间格式化json输出</a>
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/spring-boot-json/" >fast-json 时间格式化json输出</a>
         </li>
     
     
-    
-    
-    
-        </ul>
-    
-    <div class="archive-year"> 2019 </div>
-    <ul class="year-list">
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch源码与原理/" >CountDownLatch源码分析</a>
+        </li>
     
     
         <li class="archive-post-item">
