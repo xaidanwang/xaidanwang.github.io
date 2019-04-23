@@ -339,27 +339,24 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2018/08/24/hello-world/" >
+        <a class="abstract-title" href = "/2018/10/21/spring-boot-json/" >
             
-                <span>Hello World</span>
+                <span>fast-json 时间格式化json输出</span>
         </a>
         <div class="abstract-content">
-            Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick StartCreate a new post1$ hexo new "My New Post"
-More info: Writing
-Run server1$ hexo server
-More...
+            #使用fast json 序列化javaBean
+在使用fast json 序列化javaBean 对象时由于在java 对象中有Date 数据类型的属性。需要转换为 yyyy-MM-dd HH:mm:ss源码如下:javaBean:123456789public class MessageRequest&#123;    private String senduuid;    private List&lt;ReceiverUser&gt; receiverUsers;    private Date logtime;    private MessageContent content...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/08/24</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/10/21</span>
             </div>
             <!-- tags  -->
             
             <div class= abstract-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "k8s">k8s</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "spring-boot json">spring-boot json</a>
     
 </div>
             
@@ -472,9 +469,16 @@ More...
     
     
     
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 1
+        Total : 2
         </div>
         <!-- search  -->
         
@@ -490,7 +494,21 @@ More...
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/08/24/hello-world/" >Hello World</a>
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2018/10/21/spring-boot-json/" >fast-json 时间格式化json输出</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/16</span><a class="archive-post-title" href= "/2018/09/16/hello-world/" >Hello World</a>
         </li>
     
     </div>
@@ -500,11 +518,7 @@ More...
     
         <span class="sidebar-tag-name" data-tags="k8s"><span class="iconfont-archer">&#xe606;</span>k8s</span>
     
-        <span class="sidebar-tag-name" data-tags="test"><span class="iconfont-archer">&#xe606;</span>test</span>
-    
-        <span class="sidebar-tag-name" data-tags="test k8s test1"><span class="iconfont-archer">&#xe606;</span>test k8s test1</span>
-    
-        <span class="sidebar-tag-name" data-tags="test1"><span class="iconfont-archer">&#xe606;</span>test1</span>
+        <span class="sidebar-tag-name" data-tags="spring-boot json"><span class="iconfont-archer">&#xe606;</span>spring-boot json</span>
     
     </div>
     <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
@@ -541,13 +555,7 @@ jsonContent:
     
         <span class="sidebar-category-name" data-categories="k8s"><span class="iconfont-archer">&#xe60a;</span>k8s</span>
     
-        <span class="sidebar-category-name" data-categories="test"><span class="iconfont-archer">&#xe60a;</span>test</span>
-    
-        <span class="sidebar-category-name" data-categories="test-k8s-test2"><span class="iconfont-archer">&#xe60a;</span>test-k8s-test2</span>
-    
-        <span class="sidebar-category-name" data-categories="test-k8s1"><span class="iconfont-archer">&#xe60a;</span>test-k8s1</span>
-    
-        <span class="sidebar-category-name" data-categories="test-k8s"><span class="iconfont-archer">&#xe60a;</span>test-k8s</span>
+        <span class="sidebar-category-name" data-categories="java"><span class="iconfont-archer">&#xe60a;</span>java</span>
     
     </div>
     <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
