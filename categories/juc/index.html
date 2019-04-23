@@ -339,27 +339,35 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2018/09/16/hello-world/" >
+        <a class="abstract-title" href = "/2019/04/23/CountDownLatch使用/" >
             
-                <span>Hello World</span>
+                <span>CountDownLatch使用</span>
         </a>
         <div class="abstract-content">
-            Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick StartCreate a new post1$ hexo new "My New Post"
-More info: Writing
-Run server1$ hexo server
-More...
+            CountDownLatch\
+在并发编程的场景中，最常见的一个case是某个任务的执行，需要等到多个线程都执完毕之后才可以进行，CountDownLatch可以很好解决这个问题
+
+下面将主要从使用和实现原理两个方面进行说明，围绕点如下
+
+CountDownLatch 是个什么鬼\
+怎么用（结合case说明）
+底层实现原理（及如何保障功能的正常性）
+
+I. 使用说明
+同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待
+
+1.0. 接口定义属于 java.util.concurrent 包\主要方法为下面几个12345678910111213141516171...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2018/09/16</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/04/23</span>
             </div>
             <!-- tags  -->
             
             <div class= abstract-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "k8s">k8s</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "java多线程编程">java多线程编程</a>
     
 </div>
             

@@ -8,10 +8,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
-    <meta name="author" content="John Doe">
+    <meta name="author" content="Aidan Wang">
     <meta name="renderer" content="webkit">
-    <meta name="copyright" content="John Doe">
-    <meta name="keywords" content="Hexo | John Doe">
+    <meta name="copyright" content="Aidan Wang">
+    <meta name="keywords" content="Hexo | Aidan Wang">
     <meta name="description" content="">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
@@ -352,6 +352,47 @@ height:50vh;
     
     
     <article class="index-post">
+        <a class="abstract-title" href = "/2019/04/23/CountDownLatch使用/" >
+            
+                <span>CountDownLatch使用</span>
+        </a>
+        <div class="abstract-content">
+            CountDownLatch\
+在并发编程的场景中，最常见的一个case是某个任务的执行，需要等到多个线程都执完毕之后才可以进行，CountDownLatch可以很好解决这个问题
+
+下面将主要从使用和实现原理两个方面进行说明，围绕点如下
+
+CountDownLatch 是个什么鬼\
+怎么用（结合case说明）
+底层实现原理（及如何保障功能的正常性）
+
+I. 使用说明
+同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待
+
+1.0. 接口定义属于 java.util.concurrent 包\主要方法为下面几个12345678910111213141516171...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/04/23</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "java多线程编程">java多线程编程</a>
+    
+</div>
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
         <a class="abstract-title" href = "/2018/10/21/spring-boot-json/" >
             
                 <span>fast-json 时间格式化json输出</span>
@@ -617,9 +658,18 @@ More...
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 2
+        Total : 3
         </div>
         <!-- search  -->
         
@@ -644,6 +694,20 @@ More...
     
         </ul>
     
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/23</span><a class="archive-post-title" href= "/2019/04/23/CountDownLatch使用/" >CountDownLatch使用</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
     <div class="archive-year"> 2018 </div>
     <ul class="year-list">
     
@@ -657,9 +721,9 @@ More...
         <div class="sidebar-panel-tags">
     <div class="sidebar-tags-name">
     
-        <span class="sidebar-tag-name" data-tags="k8s"><span class="iconfont-archer">&#xe606;</span>k8s</span>
+        <span class="sidebar-tag-name" data-tags="java多线程编程"><span class="iconfont-archer">&#xe606;</span>java多线程编程</span>
     
-        <span class="sidebar-tag-name" data-tags="spring-boot json"><span class="iconfont-archer">&#xe606;</span>spring-boot json</span>
+        <span class="sidebar-tag-name" data-tags="k8s"><span class="iconfont-archer">&#xe606;</span>k8s</span>
     
         <span class="sidebar-tag-name" data-tags="spring-boot json 序列化"><span class="iconfont-archer">&#xe606;</span>spring-boot json 序列化</span>
     
@@ -696,6 +760,8 @@ jsonContent:
         <div class="sidebar-panel-categories">
     <div class="sidebar-categories-name">
     
+        <span class="sidebar-category-name" data-categories="juc"><span class="iconfont-archer">&#xe60a;</span>juc</span>
+    
         <span class="sidebar-category-name" data-categories="k8s"><span class="iconfont-archer">&#xe60a;</span>k8s</span>
     
         <span class="sidebar-category-name" data-categories="java"><span class="iconfont-archer">&#xe60a;</span>java</span>
@@ -709,7 +775,7 @@ jsonContent:
     <script>
     var siteMeta = {
         root: "/",
-        author: "John Doe"
+        author: "Aidan Wang"
     }
 </script>
     <!-- CDN failover -->
